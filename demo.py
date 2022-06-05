@@ -19,6 +19,7 @@ if __name__ == "__main__":
             # If loading a video, use 'break' instead of 'continue'.
             continue
 
+        height, width, _ = image.shape
         image = cv2.resize(image, (256, 256))
         tensor = torch.from_numpy(image).to(DEVICE).unsqueeze(0)
         tensor = tensor.permute(0, 3, 1, 2)
@@ -28,13 +29,15 @@ if __name__ == "__main__":
         # Convert pred_mask from `CHW` format to `HWC` format
         pred_mask = np.transpose(pred_mask, (1, 2, 0))
 
-        # Get prediction channel corresponding to building
-        pred_building_heatmap = pred_mask[:, :, CLASSES.index('human')]
         pred_mask = colour_code_segmentation(reverse_one_hot(pred_mask), CLASS_RGB_VALUES)
 
+        image = cv2.resize(image.astype(np.uint8), (width, height))
+        pred_mask = cv2.resize(pred_mask.astype(np.uint8), (width, height))
         # Flip the image horizontally for a selfie-view display.
-        cv2.imshow('Original image', cv2.flip(image.astype(np.uint8), 1))
-        cv2.imshow('Predicted mask', cv2.flip(pred_mask.astype(np.uint8), 1))
+        cv2.imshow('Original image', cv2.flip(image, 1))
+        cv2.imshow('Predicted mask', cv2.flip(pred_mask, 1))
+
         if cv2.waitKey(5) & 0xFF == 27:
             break
+
     cap.release()
