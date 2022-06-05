@@ -10,7 +10,7 @@ if __name__ == "__main__":
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     CLASSES = ['background', 'human']
     CLASS_RGB_VALUES = [[0, 0, 0], [1, 1, 1]]
-    ENCODER = 'resnet34'
+    ENCODER = 'resnet50'
     ENCODER_WEIGHTS = 'imagenet'
     BLUR_FACTOR = 20
     preprocessing_fn = smp.encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
