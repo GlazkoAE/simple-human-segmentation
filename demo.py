@@ -5,27 +5,6 @@ import segmentation_models_pytorch as smp
 
 from dataset import colour_code_segmentation, reverse_one_hot, get_preprocessing
 
-
-def blur(original_image, kernel=3, factor=10):
-    (h, w) = original_image.shape[:2]
-    k_w = int(w / kernel)
-    k_h = int(h / kernel)
-
-    # ensure the width of the kernel is odd
-    if k_w % 2 == 0:
-        k_w -= 1
-    # ensure the height of the kernel is odd
-    if k_h % 2 == 0:
-        k_h -= 1
-
-    try:
-        blured_image = cv2.GaussianBlur(original_image, (k_w, k_h), factor)
-        return blured_image
-    except:
-        print('Ignoring blur')
-        return original_image
-
-
 if __name__ == "__main__":
 
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -33,7 +12,6 @@ if __name__ == "__main__":
     CLASS_RGB_VALUES = [[0, 0, 0], [1, 1, 1]]
     ENCODER = 'resnet34'
     ENCODER_WEIGHTS = 'imagenet'
-    BLUR_KERNEL = 3
     BLUR_FACTOR = 20
     preprocessing_fn = smp.encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
     preprocessing = get_preprocessing(preprocessing_fn)
@@ -47,10 +25,10 @@ if __name__ == "__main__":
             # If loading a video, use 'break' instead of 'continue'.
             continue
 
-        height, width, _ = image.shape
-        image = cv2.resize(image, (256, 256))
+        image.flags.writeable = False
+        height, width = image.shape[:2]
 
-        sample = preprocessing(image=image)
+        sample = preprocessing(image=cv2.resize(image, (256, 256)))
         preprocessed_image = torch.from_numpy(sample['image']).to(DEVICE).unsqueeze(0)
 
         pred_mask = model(preprocessed_image.float())
@@ -61,10 +39,10 @@ if __name__ == "__main__":
 
         pred_mask = colour_code_segmentation(reverse_one_hot(pred_mask), CLASS_RGB_VALUES)
 
-        image = cv2.resize(image.astype(np.uint8), (width, height))
         pred_mask = cv2.resize(pred_mask.astype(np.uint8), (width, height))
 
-        output_image = blur(image, kernel=BLUR_KERNEL, factor=BLUR_FACTOR)
+        # output_image = blur(image, kernel=BLUR_KERNEL, factor=BLUR_FACTOR)
+        output_image = cv2.GaussianBlur(image, (-1, -1), BLUR_FACTOR)
         output_image[pred_mask == 1] = image[pred_mask == 1]
 
         # Flip the image horizontally for a selfie-view display.
