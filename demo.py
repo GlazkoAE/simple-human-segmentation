@@ -46,8 +46,8 @@ if __name__ == "__main__":
         output_image[pred_mask == 1] = image[pred_mask == 1]
 
         # Flip the image horizontally for a selfie-view display.
-        cv2.imshow('Original image', cv2.flip(image, 1))
-        cv2.imshow('Result', cv2.flip(output_image, 1))
+        # cv2.imshow('Original image', cv2.flip(image, 1))
+        cv2.imshow('Background blur', cv2.flip(output_image, 1))
 
         if cv2.waitKey(5) & 0xFF == 27:
             break
